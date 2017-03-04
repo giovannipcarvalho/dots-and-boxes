@@ -40,7 +40,11 @@ class DotsAndBoxes(object):
         self.board = np.array(game_obj.board)
         self.boxes = self.board[1::2, 1::2]
 
-    def play(self, player, i, j):
+    def play(self, move=None, i=None, j=None, player=None):
+        if not player:
+            player = self.turn
+        if isinstance(move, np.ndarray):
+            i, j = move[0], move[1]
         if self._is_valid(player, i, j):
             self.board[i, j] = player
             self._update(player, i, j)
@@ -55,7 +59,11 @@ class DotsAndBoxes(object):
         turn = self.turn == player   # is players' turn
         edge = i%2 != j%2            # i xor j are even
         free = self.board[i, j] == 0 # edge is not already filled
-        return turn and edge and free
+        over = self.is_over()        # game is over
+        return not over and turn and edge and free
+
+    def is_over(self):
+        return np.all(self.board[self._edges])
 
     def _update(self, player, i, j):
         vertical = i%2 > j%2
