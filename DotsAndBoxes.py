@@ -40,10 +40,10 @@ class DotsAndBoxes(object):
         self.board = np.array(game_obj.board)
         self.boxes = self.board[1::2, 1::2]
 
-    def play(self, player, x, y):
-        if self._is_valid(player, x, y):
-            self.board[x, y] = player
-            self._update(player, x, y)
+    def play(self, player, i, j):
+        if self._is_valid(player, i, j):
+            self.board[i, j] = player
+            self._update(player, i, j)
         else:
             raise Exception('Invalid move')
 
@@ -51,29 +51,29 @@ class DotsAndBoxes(object):
         unplayed = np.logical_not(self.board)
         return np.transpose(np.where(np.logical_and(unplayed, self._edges)))
 
-    def _is_valid(self, player, x, y):
+    def _is_valid(self, player, i, j):
         turn = self.turn == player   # is players' turn
-        even = x%2 != y%2            # x xor y are even
-        free = self.board[x, y] == 0 # edge is not already filled
-        return turn and even and free
+        edge = i%2 != j%2            # i xor j are even
+        free = self.board[i, j] == 0 # edge is not already filled
+        return turn and edge and free
 
-    def _update(self, player, x, y):
-        vertical = x%2 > y%2
+    def _update(self, player, i, j):
+        vertical = i%2 > j%2
         if vertical:
-            a = self._check_box(player, x, y-1)
-            b = self._check_box(player, x, y+1)
+            a = self._check_box(player, i, j-1)
+            b = self._check_box(player, i, j+1)
         else:
-            a = self._check_box(player, x-1, y)
-            b = self._check_box(player, x+1, y)
+            a = self._check_box(player, i-1, j)
+            b = self._check_box(player, i+1, j)
         if not (a or b):
             self.turn *= -1
 
-    def _check_box(self, player, x, y):
-        xvalid = x > 0 and x < 2*self.rows-1
-        yvalid = y > 0 and y < 2*self.cols-1
-        odd = x%2 == y%2 == 1        # valid box coord
-        if xvalid and yvalid and odd:
-            filled = np.all(self.board[[x-1, x+1, x, x], [y, y, y-1, y+1]])
+    def _check_box(self, player, i, j):
+        irange = i > 0 and i < 2*self.rows-1
+        jrange = j > 0 and j < 2*self.cols-1
+        box = i%2 == j%2 == 1        # i and j are odd
+        if irange and jrange and box:
+            filled = np.all(self.board[[i-1, i+1, i, i], [j, j, j-1, j+1]])
             if filled:
-                self.board[x, y] = player
+                self.board[i, j] = player
                 return filled
