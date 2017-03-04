@@ -17,8 +17,8 @@ class DotsAndBoxes(object):
             self._copy(game_obj)
         else:
             self.rows, self.cols = rows, cols
-        self.turn = initial_player
-        self.board = np.zeros((2*rows-1, 2*cols-1), dtype=np.int)
+            self.turn = initial_player
+            self.board = np.zeros((2*rows-1, 2*cols-1), dtype=np.int)
             self.boxes = self.board[1::2, 1::2]
             r, c = self.board.shape
             self._edges = np.reshape([i%2 != j%2 for j in range(c) for i in range(r)], (r, c))
@@ -47,6 +47,10 @@ class DotsAndBoxes(object):
         else:
             raise Exception('Invalid move')
 
+    def get_available_moves(self):
+        unplayed = np.logical_not(self.board)
+        return np.transpose(np.where(np.logical_and(unplayed, self._edges)))
+
     def _is_valid(self, player, x, y):
         turn = self.turn == player   # is players' turn
         even = x%2 != y%2            # x xor y are even
@@ -67,7 +71,7 @@ class DotsAndBoxes(object):
     def _check_box(self, player, x, y):
         xvalid = x > 0 and x < 2*self.rows-1
         yvalid = y > 0 and y < 2*self.cols-1
-        odd = x%2 == y%2 == 1          # valid box coord
+        odd = x%2 == y%2 == 1        # valid box coord
         if xvalid and yvalid and odd:
             filled = np.all(self.board[[x-1, x+1, x, x], [y, y, y-1, y+1]])
             if filled:
