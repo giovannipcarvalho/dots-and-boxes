@@ -2,12 +2,42 @@ import numpy as np
 
 PLAYER1 = -1
 PLAYER2 = 1
+PLAYERS = {'B': -1, 'W': 1}
+
+def board_shape(board_string):
+    lines = board_string.split("|")
+    rows, cols = (len(lines)+1)/2, (len(lines[0])+1)/2
+    return rows, cols
 
 class DotsAndBoxes(object):
-    def __init__(self, initial_player, cols, rows):
-        self.cols, self.rows = cols, rows
+    def __init__(self, initial_player=None, rows=None, cols=None, board_string=None, game_obj=None):
+        if isinstance(board_string, str):      # construct from string
+            self._from_string(initial_player, board_string)
+        elif isinstance(game_obj, DotsAndBoxes):  # copy constructor
+            self._copy(game_obj)
+        else:
+            self.rows, self.cols = rows, cols
         self.turn = initial_player
         self.board = np.zeros((2*rows-1, 2*cols-1), dtype=np.int)
+            self.boxes = self.board[1::2, 1::2]
+            r, c = self.board.shape
+            self._edges = np.reshape([i%2 != j%2 for j in range(c) for i in range(r)], (r, c))
+
+    def _from_string(self, initial_player, board_string):
+        lines = board_string.split("|")
+        rows, cols = board_shape(board_string)
+        self.__init__(initial_player, rows, cols)
+        for i, r in enumerate(lines):
+            for j, s in enumerate(r):
+                edge, box = i%2 != j%2, i%2 == j%2 == 1
+                if edge and s == 'x':      # is a filled edge
+                    self.board[i, j] += 1
+                elif box and s in PLAYERS: # is a filled box
+                    self.board[i, j] = PLAYERS[s]
+
+    def _copy(self, game_obj):
+        self.__dict__.update(game_obj.__dict__)
+        self.board = np.array(game_obj.board)
         self.boxes = self.board[1::2, 1::2]
 
     def play(self, player, x, y):
