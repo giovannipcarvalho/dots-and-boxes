@@ -10,8 +10,8 @@ class Node(object):
         self.b = b
 
 def evaluate(game, player):
-    player_score = np.sum(game.boxes == player)
-    opponent_score = np.sum(game.boxes == -player)
+    player_score = game.score[player == 1]
+    opponent_score = game.score[player == -1]
     return player_score - opponent_score
 
 def min_play(game):
@@ -69,14 +69,14 @@ def alpha_beta(game, max, a, b):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        sys.exit("Usage: %s <next-player> <board-string>" % (sys.argv[0]))
-
-    # game = DotsAndBoxes(PLAYER1, board_string='._.x.|_*x*_|.x._.|xBx*_|.x._.')
-
-    next_player = sys.argv[1]
-    board_string = sys.argv[2]
+        next_player = 'B'
+        board_string = '._.x.|_*x*_|.x._.|xBx*_|.x._.'
+        # sys.exit("Usage: %s <next-player> <board-string>" % (sys.argv[0]))
+    else:
+        next_player = sys.argv[1]
+        board_string = sys.argv[2]
+    
     game = DotsAndBoxes(PLAYERS[next_player], board_string=board_string)
-
     print game.board
 
     print mini_max(game)
