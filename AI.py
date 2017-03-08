@@ -64,8 +64,73 @@ def mini_max(game):
             best_score = score
     return best_move
 
-def alpha_beta(game, max, a, b):
-    pass
+def copy_play(game, move):
+    g = DotsAndBoxes(game_obj=game)
+    g.play(move)
+    return g
+
+def alpha_beta(game, max_depth=4):
+    def calc_value(game, alpha, beta, depth, maximize):
+        if should_stop(game, depth):
+            return evaluate(game, game.turn)
+        v = -np.inf if maximize else np.inf
+        for move in game.get_available_moves():
+            g = copy_play(game, move)
+            scored = g.turn == game.turn
+            if scored:
+                v = max(v, calc_value(g, alpha, beta, depth+1, True)) if maximize else min(v, calc_value(g, alpha, beta, depth+1, False))
+            else:
+                v = max(v, calc_value(g, alpha, beta, depth+1, False)) if maximize else min(v, calc_value(g, alpha, beta, depth+1, True))
+            
+            if maximize:
+                alpha = max(alpha, v)
+            else:
+                beta = min(beta, v)
+            
+            if beta <= alpha:
+                break
+        
+        return v
+    
+    def max_value(game, alpha, beta, depth):
+        if should_stop(game, depth):
+            return evaluate(game, game.turn)
+        v = -np.inf
+        for move in game.get_available_moves():
+            g = copy_play(game, move)
+            scored = g.turn == game.turn
+            if scored:
+                v = max(v, max_value(g, alpha, beta, depth+1))
+            else:
+                v = max(v, min_value(g, alpha, beta, depth+1))
+            alpha = max(alpha, v)
+            if beta <= alpha:
+                break
+        return v
+    
+    def min_value(game, alpha, beta, depth):
+        if should_stop(game, depth):
+            return evaluate(game, game.turn)
+        v = np.inf
+        for move in game.get_available_moves():
+            g = copy_play(game, move)
+            scored = g.turn == game.turn
+            if scored:
+                v = min(v, min_value(g, alpha, beta, depth+1))
+            else:
+                v = min(v, max_value(g, alpha, beta, depth+1))
+            beta = min(beta, v)
+            if beta <= alpha:
+                break
+        return v
+    
+    should_stop = lambda game, depth: depth >= max_depth or game.is_over()
+    
+    moves = game.get_available_moves()
+
+    scores = map(lambda m: calc_value(copy_play(game, m), -np.inf, np.inf, 0, True), moves)
+    
+    return moves[np.argmax(scores)]
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
@@ -76,7 +141,9 @@ if __name__ == "__main__":
         next_player = sys.argv[1]
         board_string = sys.argv[2]
     
-    game = DotsAndBoxes(PLAYERS[next_player], board_string=board_string)
-    print game.board
+    # game = DotsAndBoxes(PLAYERS[next_player], board_string=board_string)
+    game = DotsAndBoxes(-1, 3, 3)
+    # print game.board
 
-    print mini_max(game)
+    # print mini_max(game)
+    print alpha_beta(game, 0)
