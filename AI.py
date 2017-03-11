@@ -11,46 +11,6 @@ def copy_play(game, move):
     g.play(move)
     return g
 
-def alpha_beta(game, max_depth=4):    
-    def max_value(game, alpha, beta, depth):
-        if should_stop(game, depth):
-            return evaluate(game, game.turn)
-        v = -np.inf
-        for move in game.get_available_moves():
-            g = copy_play(game, move)
-            scored = g.turn == game.turn
-            if scored:
-                v = max(v, max_value(g, alpha, beta, depth+1))
-            else:
-                v = max(v, min_value(g, alpha, beta, depth+1))
-            alpha = max(alpha, v)
-            if beta <= alpha:
-                break
-        return v
-    
-    def min_value(game, alpha, beta, depth):
-        if should_stop(game, depth):
-            return evaluate(game, game.turn)
-        v = np.inf
-        for move in game.get_available_moves():
-            g = copy_play(game, move)
-            scored = g.turn == game.turn
-            if scored:
-                v = min(v, min_value(g, alpha, beta, depth+1))
-            else:
-                v = min(v, max_value(g, alpha, beta, depth+1))
-            beta = min(beta, v)
-            if beta <= alpha:
-                break
-        return v
-    
-    should_stop = lambda game, depth: depth >= max_depth or game.is_over()
-    
-    moves = game.get_available_moves()
-    scores = map(lambda m: max_value(copy_play(game, m), -np.inf, np.inf, 0), moves)
-    
-    return moves[np.argmax(scores)]
-
 def alpha_beta_search(game, depth, a, b, maximize):
     if depth == 0 or game.is_over():
         return evaluate(game, game.turn)
