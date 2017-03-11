@@ -11,17 +11,18 @@ def board_shape(board_string):
 
 class DotsAndBoxes(object):
     def __init__(self, initial_player=None, rows=None, cols=None, board_string=None, game_obj=None):
-        if isinstance(board_string, str):      # construct from string
+        if board_string is not None: # construct from string
             self._from_string(initial_player, board_string)
-        elif isinstance(game_obj, DotsAndBoxes):  # copy constructor
+        elif game_obj is not None:   # copy constructor
             self._copy(game_obj)
         else:
             self.rows, self.cols = rows, cols
             self.score = [0, 0] # B, W
             self.turn = initial_player
             self.board = np.zeros((2*rows-1, 2*cols-1), dtype=np.int)
-            r, c = self.board.shape
-            self._edges = np.reshape([i%2 != j%2 for j in range(c) for i in range(r)], (r, c))
+            self.r, self.c = self.board.shape
+            self._edges = np.reshape([i%2 != j%2 for j in xrange(self.c) for i in xrange(self.r)], (self.r, self.c))
+            self.num_boxes = (rows-1) * (cols-1)
 
     def _from_string(self, initial_player, board_string):
         lines = board_string.split("|")
@@ -44,8 +45,8 @@ class DotsAndBoxes(object):
     def play(self, move=None, i=None, j=None, player=None):
         if not player:
             player = self.turn
-        if isinstance(move, np.ndarray):
-            i, j = move[0], move[1]
+        if move is not None:
+            i, j = move
         if self._is_valid(player, i, j):
             self.board[i, j] = player
             self._update(player, i, j)
@@ -54,17 +55,14 @@ class DotsAndBoxes(object):
 
     def get_available_moves(self):
         unplayed = np.logical_not(self.board)
-        return np.transpose(np.where(np.logical_and(unplayed, self._edges)))
+        moves = np.where(np.logical_and(unplayed, self._edges))
+        return zip(moves[0], moves[1])
 
     def _is_valid(self, player, i, j):
-        turn = self.turn == player   # is players' turn
-        edge = i%2 != j%2            # i xor j are even
-        free = self.board[i, j] == 0 # edge is not already filled
-        over = self.is_over()        # game is over
-        return not over and turn and edge and free
+        return self.turn == player and self.board[i, j] == 0 and i%2 != j%2 and not self.is_over()
 
     def is_over(self):
-        return sum(self.score) == (self.rows-1) * (self.cols-1)
+        return sum(self.score) == self.num_boxes
 
     def _update(self, player, i, j):
         vertical = i%2 > j%2
@@ -74,10 +72,7 @@ class DotsAndBoxes(object):
             self.turn *= -1
 
     def _check_box(self, player, i, j):
-        irange = i > 0 and i < 2*self.rows-1
-        jrange = j > 0 and j < 2*self.cols-1
-        box = i%2 == j%2 == 1        # i and j are odd
-        if irange and jrange: # and box:
+        if (i and i < self.r) and (j and j < self.c):
             filled = self.board[i-1, j] and self.board[i+1, j] and self.board[i, j-1] and self.board[i, j+1]
             if filled:
                 self.board[i, j] = player
