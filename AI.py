@@ -13,49 +13,50 @@ def copy_play(game, move):
 
 def alpha_beta_search(game, depth, a, b, maximize):
     if depth == 0 or game.is_over():
-        return evaluate(game, game.turn)
+        return evaluate(game, game.turn), None
     
     if maximize:
         v = -np.inf
-        for move in game.get_available_moves():
+        available_moves = game.get_available_moves()
+        best_move, best_score = available_moves[0], v
+        for move in available_moves:
             g = copy_play(game, move)
             if g.turn == game.turn:
-                v = max(v, alpha_beta_search(g, depth - 1, a, b, True))
+                v = max(v, alpha_beta_search(g, depth - 1, a, b, True)[0])
             else:
-                v = max(v, alpha_beta_search(g, depth - 1, a, b, False))
+                v = max(v, alpha_beta_search(g, depth - 1, a, b, False)[0])
+            if v > best_score:
+                best_move = move
+                best_score = v
             a = max(a, v)
             if b <= a:
                 break
-        return v
+        return v, best_move
     else:
         v = np.inf
-        for move in game.get_available_moves():
+        available_moves = game.get_available_moves()
+        best_move, best_score = available_moves[0], v
+        for move in available_moves:
             g = copy_play(game, move)
             if g.turn == game.turn:
-                v = min(v, alpha_beta_search(g, depth - 1, a, b, False))
+                v = min(v, alpha_beta_search(g, depth - 1, a, b, False)[0])
             else:
-                v = min(v, alpha_beta_search(g, depth - 1, a, b, True))
+                v = min(v, alpha_beta_search(g, depth - 1, a, b, True)[0])
+            if v < best_score:
+                best_move = move
+                best_score = v
             b = min(b, v)
             if b <= a:
                 break
-        return v
+        return v, best_move
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        next_player = 'B'
-        board_string = '._.x.|_*x*_|.x._.|xBx*_|.x._.'
-        # sys.exit("Usage: %s <next-player> <board-string>" % (sys.argv[0]))
+        sys.exit("Usage: %s <next-player> <board-string>" % (sys.argv[0]))
     else:
         next_player = sys.argv[1]
         board_string = sys.argv[2]
     
-    # game = DotsAndBoxes(PLAYERS[next_player], board_string=board_string)
-    game = DotsAndBoxes(-1, 4, 4)
-    print alpha_beta_search(game, 8, -np.inf, np.inf, True)
-    # moves = game.get_available_moves()
-    # scores = map(lambda m: alpha_beta_search(copy_play(game, m), 5, -np.inf, np.inf, True), moves)
-
-    # print game.board
-
-    # print mini_max(game)
-    # print alpha_beta(game, 5)
+    game = DotsAndBoxes(PLAYERS[next_player], board_string=board_string)
+    score, move = alpha_beta_search(game, 8, -np.inf, np.inf, True)
+    print "%d %d" % (move)
